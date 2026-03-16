@@ -9,14 +9,12 @@ X = pd.DataFrame(data.data, columns=data.feature_names)
 y = data.target
 
 # Split before any processing
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Use cross-validation for evaluation
 clf = RandomForestClassifier(random_state=42)
-scores = cross_val_score(clf, X_train, y_train, cv=5)
-print(f"CV Accuracy: {scores.mean():.2f}")
+print(f"CV Accuracy: {cross_val_score(clf, X_tr, y_tr, cv=5).mean():.2f}")
 
 # Final fit
-clf.fit(X_train, y_train)
-test_score = clf.score(X_test, y_test)
-print(f"Test Accuracy: {test_score:.2f}")
+clf.fit(X_tr, y_tr)
+print(f"Test Accuracy: {clf.score(X_te, y_te):.2f}")

@@ -14,8 +14,8 @@ def eval_corpus():
     
     rule_metrics = {} # rule_id -> {"good": count, "bad": count}
 
-    for category in ["good", "bad"]:
-        path = os.path.join(corpus_dir, category)
+    for data_split in ["good", "bad"]:
+        path = os.path.join(corpus_dir, data_split)
         if not os.path.exists(path): continue
         
         for file in os.listdir(path):
@@ -46,11 +46,11 @@ def eval_corpus():
                                 rule_ids_in_file.add(rid)
                                 if rid not in rule_metrics:
                                     rule_metrics[rid] = {"good": 0, "bad": 0}
-                                rule_metrics[rid][category] += 1
+                                rule_metrics[rid][data_split] += 1
 
                             results.append({
                                 "file": fpath,
-                                "is_good": (category == "good"),
+                                "is_good": (data_split == "good"),
                                 "violation_count": len(violations),
                                 "rules_triggered": ", ".join(rule_ids_in_file),
                                 "score": data.get("summary", {}).get("score", "N/A"),

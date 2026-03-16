@@ -5,3 +5,4 @@ paths:
     - "corpus/bad"
     - "examples"
     - "test_data"
+    - ".agent"
