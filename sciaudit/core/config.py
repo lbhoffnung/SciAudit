@@ -44,13 +44,23 @@ class Config:
 
     def should_ignore(self, path: str) -> bool:
         norm_path = os.path.normpath(path).replace("\\", "/")
-        path_parts = norm_path.split("/")
+        path_parts = [p for p in norm_path.split("/") if p]
         
         for ignore in self.ignore_paths:
-            # Verifica se o padrão de ignore (ex: 'venv') é uma sub-pasta exata
-            # ou o arquivo exato dentro do caminho completo.
-            if ignore in path_parts:
-                return True
+            # Normaliza o padrão de ignore para garantir consistência (ex: 'corpus/bad')
+            norm_ignore = os.path.normpath(ignore).replace("\\", "/")
+            ignore_parts = [p for p in norm_ignore.split("/") if p]
+            
+            if not ignore_parts:
+                continue
+                
+            # Verifica se ignore_parts é uma sub-sequência contígua de path_parts.
+            # Isso garante que 'corpus/bad' case com 'repo/corpus/bad/file.py'
+            # mas 'venv' não case com 'myvenv_backup'.
+            n = len(ignore_parts)
+            for i in range(len(path_parts) - n + 1):
+                if path_parts[i:i+n] == ignore_parts:
+                    return True
         return False
 
     def is_in_baseline(self, violation_data: Dict) -> bool:
