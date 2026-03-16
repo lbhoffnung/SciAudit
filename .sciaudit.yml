@@ -1,0 +1,12 @@
+# Configuração do SciAudit para o próprio repositório
+paths:
+  ignore:
+    - "venv"
+    - "corp"       # Partial match might fail if we use exact parts, but let's stick to exact parts
+    - "corpus"
+    - "examples"
+    - "tests"
+    - "test_data"
+    - ".agent"
+    - ".github"
+    - "tools"
