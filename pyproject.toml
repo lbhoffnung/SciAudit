@@ -21,8 +21,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/seu-usuario/SciAudit"
-"Bug Tracker" = "https://github.com/seu-usuario/SciAudit/issues"
+"Homepage" = "https://github.com/behw0/SciAudit"
+"Bug Tracker" = "https://github.com/behw0/SciAudit/issues"
 
 [project.scripts]
 sciaudit = "sciaudit.cli.main:main"
