@@ -20,6 +20,10 @@ class FeatureImportanceRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.INFO
 
+    @property
+    def hint(self) -> str:
+        return "Verifique a correlação (df.corr() ou VIF) antes de interpretar importâncias."
+
     def __init__(self):
         super().__init__()
         self._suspicious_attributes = {"feature_importances_", "coef_", "get_feature_importance"}

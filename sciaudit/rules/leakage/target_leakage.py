@@ -20,6 +20,10 @@ class TargetLeakageRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.ERROR
 
+    @property
+    def hint(self) -> str:
+        return "Realize o split antes de qualquer transformação (StandardScaler, fit_transform)."
+
     def __init__(self):
         super().__init__()
         self.reset()

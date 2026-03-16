@@ -19,6 +19,10 @@ class OverfittingCegoRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.WARNING
 
+    @property
+    def hint(self) -> str:
+        return "Use sempre validação cruzada (cross_val_score) em vez de apenas métricas simples em hold-out."
+
     def __init__(self):
         super().__init__()
         self.reset()
@@ -74,6 +78,10 @@ class PHackingRule(ScientificRule):
     @property
     def default_severity(self) -> Severity:
         return Severity.WARNING
+
+    @property
+    def hint(self) -> str:
+        return "Ao realizar múltiplos testes, use correções como Bonferroni ou FDR para evitar falsos positivos."
 
     def __init__(self):
         super().__init__()

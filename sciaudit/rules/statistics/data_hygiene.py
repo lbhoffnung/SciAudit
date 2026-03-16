@@ -19,6 +19,10 @@ class SilentNaNDropRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.WARNING
 
+    @property
+    def hint(self) -> str:
+        return "Adicione um print(df.shape) ou log após 'dropna()' para documentar quantos dados foram perdidos."
+
     def __init__(self):
         super().__init__()
         self.reset()
@@ -70,6 +74,10 @@ class ClassImbalanceRule(ScientificRule):
     @property
     def default_severity(self) -> Severity:
         return Severity.WARNING
+
+    @property
+    def hint(self) -> str:
+        return "Cheque o balanceamento de classes (df.value_counts()) ou use métricas como F1/AUC/MCC."
 
     def __init__(self):
         super().__init__()

@@ -14,8 +14,9 @@ class TestAuditEngine(unittest.TestCase):
 
     def test_calculate_score_f_on_critical(self):
         from sciaudit.core.models import Violation
-        v = Violation("TEST", "Msg", Severity.CRITICAL, 1, 0)
-        score = self.engine._calculate_score([v])
+        # 4 errors should drop score to 0 (100 - 4*30 = -20 -> 0)
+        violations = [Violation("TEST", "RuleName", "Msg", Severity.ERROR, i, 0) for i in range(4)]
+        score = self.engine._calculate_score(violations)
         self.assertEqual(score, "F")
 
     def test_parse_ipynb(self):
@@ -32,7 +33,7 @@ class TestAuditEngine(unittest.TestCase):
         with open("tmp_test.ipynb", "w") as f:
             json.dump(nb_content, f)
         
-        code = self.engine._parse_ipynb("tmp_test.ipynb")
+        code, mapping = self.engine._parse_ipynb("tmp_test.ipynb")
         self.assertIn("print('hello')", code)
         os.remove("tmp_test.ipynb")
 

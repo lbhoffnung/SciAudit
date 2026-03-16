@@ -21,6 +21,10 @@ class CausalClaimsRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.INFO
 
+    @property
+    def hint(self) -> str:
+        return "Evite usar 'causa' ou 'efeito' em comentários sem métodos de inferência causal."
+
     def __init__(self):
         super().__init__()
         self._causal_keywords = [r"causa", r"impacto", r"efeito", r"decorrente de"]

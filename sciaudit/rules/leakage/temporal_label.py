@@ -20,6 +20,10 @@ class TimeLeakageRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.ERROR
 
+    @property
+    def hint(self) -> str:
+        return "Evite reordenar dados após splits temporais (manter ordem cronológica)."
+
     def __init__(self):
         super().__init__()
         self.reset()
@@ -66,6 +70,10 @@ class LabelLeakageRule(ScientificRule):
     @property
     def default_severity(self) -> Severity:
         return Severity.ERROR
+
+    @property
+    def hint(self) -> str:
+        return "Não use a variável alvo para derivar novas features."
 
     def visit_Assign(self, node: ast.Assign):
         # Procura por padrões tipo df['feature'] = df['target'] * x

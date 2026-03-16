@@ -28,6 +28,11 @@ class ScientificRule(ABC, ast.NodeVisitor):
         pass
 
     @property
+    @abstractmethod
+    def hint(self) -> str:
+        pass
+
+    @property
     def effective_severity(self) -> Severity:
         return self.severity_override if self.severity_override else self.default_severity
 
@@ -44,7 +49,7 @@ class ScientificRule(ABC, ast.NodeVisitor):
             column=column,
             cell=cell,
             snippet=snippet,
-            hint=hint
+            hint=hint or self.hint
         ))
 
     def collect(self) -> List[Violation]:

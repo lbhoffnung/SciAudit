@@ -19,6 +19,10 @@ class ShuffleBeforeTimeSplitRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.ERROR
 
+    @property
+    def hint(self) -> str:
+        return "Use shuffle=False em splits de séries temporais para preservar a ordem cronológica."
+
     def visit_Call(self, node: ast.Call):
         func_name = ""
         if isinstance(node.func, ast.Name):

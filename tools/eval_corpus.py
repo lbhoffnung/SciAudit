@@ -12,6 +12,8 @@ def eval_corpus():
 
     results = []
     
+    rule_metrics = {} # rule_id -> {"good": count, "bad": count}
+
     for category in ["good", "bad"]:
         path = os.path.join(corpus_dir, category)
         if not os.path.exists(path): continue
@@ -27,22 +29,37 @@ def eval_corpus():
                         ["python", "-m", "sciaudit", fpath, "--format", "json"],
                         capture_output=True,
                         text=True,
-                        check=False # We don't want it to crash if exit code is 1
+                        check=False,
+                        env={**os.environ, "PYTHONPATH": "."}
                     )
                     
                     if res.stdout:
                         try:
-                            data = json.loads(res.stdout)
+                            # Clean potential encoding noise from start of stdout
+                            clean_stdout = res.stdout[res.stdout.find("{"):]
+                            data = json.loads(clean_stdout)
                             violations = data.get("violations", [])
+                            
+                            rule_ids_in_file = set()
+                            for v in violations:
+                                rid = v["id"]
+                                rule_ids_in_file.add(rid)
+                                if rid not in rule_metrics:
+                                    rule_metrics[rid] = {"good": 0, "bad": 0}
+                                rule_metrics[rid][category] += 1
+
                             results.append({
                                 "file": fpath,
-                                "category": category,
+                                "is_good": (category == "good"),
                                 "violation_count": len(violations),
-                                "rules_triggered": ", ".join(set(v["id"] for v in violations)),
-                                "score": data.get("summary", {}).get("score", "N/A")
+                                "rules_triggered": ", ".join(rule_ids_in_file),
+                                "score": data.get("summary", {}).get("score", "N/A"),
+                                "errors": data.get("summary", {}).get("errors", 0),
+                                "warnings": data.get("summary", {}).get("warnings", 0),
+                                "infos": data.get("summary", {}).get("infos", 0)
                             })
-                        except json.JSONDecodeError:
-                            print(f"Error parsing JSON for {fpath}")
+                        except json.JSONDecodeError as je:
+                            print(f"Error parsing JSON for {fpath}: {je}")
                     else:
                         print(f"No output for {fpath}: {res.stderr}")
                 except Exception as e:
@@ -50,15 +67,23 @@ def eval_corpus():
 
     # Save summary
     if results:
-        # CSV
         with open("corpus_eval_summary.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=results[0].keys())
             writer.writeheader()
             writer.writerows(results)
         
-        print(f"\nEvaluation complete. Summary saved to 'corpus_eval_summary.csv'.")
-    else:
-        print("No results found.")
+        # Save rule metrics
+        with open("rule_metrics.csv", "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["rule_id", "triggered_in_good", "triggered_in_bad"])
+            writer.writeheader()
+            for rid, counts in sorted(rule_metrics.items()):
+                writer.writerow({
+                    "rule_id": rid,
+                    "triggered_in_good": counts["good"],
+                    "triggered_in_bad": counts["bad"]
+                })
+        
+        print(f"\nEvaluation complete. Summaries saved to 'corpus_eval_summary.csv' and 'rule_metrics.csv'.")
 
 if __name__ == "__main__":
     eval_corpus()

@@ -1,0 +1,6 @@
+rule_id,triggered_in_good,triggered_in_bad
+SCI-001,0,2
+SCI-002,0,1
+SCI-005,1,1
+SCI-008,3,2
+SCI-009,0,1

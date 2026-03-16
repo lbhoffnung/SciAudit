@@ -2,7 +2,7 @@ repos:
   - repo: local
     hooks:
       - id: sciaudit
-        name: SciAudit (Scientific Integrity Linter)
+        name: SciAudit
         entry: python -m sciaudit
         language: system
         types: [python]

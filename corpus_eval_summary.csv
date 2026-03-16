@@ -1,0 +1,5 @@
+file,is_good,violation_count,rules_triggered,score,errors,warnings,infos
+corpus\good\clean.py,True,2,"SCI-005, SCI-008",C,1,1,0
+corpus\good\simple_ml.py,True,2,SCI-008,D,2,0,0
+corpus\bad\bad_stats.py,False,3,"SCI-005, SCI-008, SCI-009",C,1,2,0
+corpus\bad\leakage.py,False,4,"SCI-001, SCI-002, SCI-008",F,3,1,0

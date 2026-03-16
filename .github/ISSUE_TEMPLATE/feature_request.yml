@@ -1,0 +1,36 @@
+name: "Regra Nova / Melhoria Científica"
+description: Sugira uma nova lei científica ou melhore uma detecção existente.
+labels: ["new-rule", "scientific-integrity"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por contribuir! O SciAudit busca capturar as melhores práticas metodológicas.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema científico esta regra resolve?
+      description: Explique o erro metodológico que a regra deve capturar (ex: vazamento de dados via X).
+      placeholder: Ex: O uso de normalização global antes de split temporal causa otimismo irreal.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Exemplos de Código
+      description: Forneça um exemplo de código que DEVE ser capturado e (se possível) um que NÃO DEVE ser capturado.
+      placeholder: |
+        Ruim:
+        scaler.fit(df)
+        split(df)
+
+        Bom:
+        split(df)
+        scaler.fit(train)
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Referência Bibliográfica
+      description: Link para paper, blog post ou documentação que sustenta o rigor desta regra.

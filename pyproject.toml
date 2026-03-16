@@ -8,10 +8,14 @@ version = "0.1.0"
 authors = [
   { name = "Lucas Hoffnung Bernardo", email = "lumatizerh@hotmail.com" },
 ]
-description = "SciAudit: Auditor de integridade científica em código e notebooks Python."
+description = "Auditor de integridade científica para código e notebooks Python (vazamento de dados, p-hacking, reprodutibilidade)."
 readme = "README.md"
+keywords = ["data-science", "lint", "integrity", "reproducibility", "machine-learning"]
 requires-python = ">=3.10"
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

@@ -1,0 +1,28 @@
+name: "Bug Report / Falso Positivo"
+description: Relate uma falha técnica ou um alerta correto em código legítimo.
+labels: ["bug", "false-positive"]
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Descrição do Problema
+      description: O que aconteceu e o que era esperado?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+      description: Cole o trecho de código ou comando executado.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Saída do SciAudit (JSON preferencialmente)
+      description: Execute `sciaudit arquivo.py --format json` e cole o resultado aqui.
+  - type: input
+    id: version
+    attributes:
+      label: Versão do SciAudit
+      placeholder: ex: 0.1.0

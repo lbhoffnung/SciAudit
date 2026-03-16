@@ -20,6 +20,10 @@ class TestSetContaminationRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.ERROR
 
+    @property
+    def hint(self) -> str:
+        return "Nunca use dados de teste (X_test, y_test) durante a fase de treinamento (fit)."
+
     def visit_Call(self, node: ast.Call):
         func_name = ""
         if isinstance(node.func, ast.Name):

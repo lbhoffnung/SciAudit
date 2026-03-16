@@ -4,9 +4,36 @@ from typing import List, Dict, Optional
 from .models import Severity
 
 class Config:
-    def __init__(self):
+    PROFILES = {
+        "strict": {
+            # Everything is error
+            "SCI-001": "error", "SCI-002": "error", "SCI-003": "error", "SCI-004": "error",
+            "SCI-005": "error", "SCI-006": "error", "SCI-007": "error", "SCI-008": "error",
+            "SCI-009": "error", "SCI-013": "error", "SCI-014": "error", "SCI-017": "error",
+        },
+        "balanced": {
+            # Standard defaults
+        },
+        "relaxed": {
+            "SCI-002": "info",
+            "SCI-003": "off",
+            "SCI-004": "info",
+            "SCI-005": "warning",
+            "SCI-009": "info",
+            "SCI-013": "off",
+            "SCI-014": "info",
+            "SCI-017": "warning",
+        }
+    }
+
+    def __init__(self, profile_name: str = "balanced"):
         self.rules: Dict[str, str] = {} # rule_id -> severity name or 'off'
         self.ignore_paths: List[str] = []
+        self.baseline: List[Dict] = [] # List of violation fingerprints
+        
+        # Load profile defaults
+        if profile_name in self.PROFILES:
+            self.rules.update(self.PROFILES[profile_name])
 
     def get_rule_severity(self, rule_id: str) -> Optional[str]:
         return self.rules.get(rule_id)
@@ -21,8 +48,20 @@ class Config:
                 return True
         return False
 
-def load_config(root_dir: str = ".") -> Config:
-    config = Config()
+    def is_in_baseline(self, violation_data: Dict) -> bool:
+        """
+        Check if a violation fingerprint matches one in the baseline.
+        """
+        for b in self.baseline:
+            # Match by rule_id, file and line (basic fingerprint)
+            if b.get("rule_id") == violation_data.get("rule_id") and \
+               b.get("file") == violation_data.get("file") and \
+               b.get("line") == violation_data.get("line"):
+                return True
+        return False
+
+def load_config(root_dir: str = ".", profile: Optional[str] = None) -> Config:
+    config = Config(profile_name=profile or "balanced")
     config_path = os.path.join(root_dir, ".sciaudit.yml")
     
     if not os.path.exists(config_path):
@@ -75,6 +114,7 @@ def load_config(root_dir: str = ".") -> Config:
                             config.ignore_paths.append(path_val)
                             
     except Exception as e:
-        print(f"\x1b[33mWarning: Failed to parse .sciaudit.yml ({e}). Using defaults.\x1b[0m")
+        import sys
+        print(f"\x1b[33mWarning: Failed to parse .sciaudit.yml ({e}). Using defaults.\x1b[0m", file=sys.stderr)
         
     return config

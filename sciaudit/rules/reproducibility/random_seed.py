@@ -20,6 +20,10 @@ class ReproducibilityRule(ScientificRule):
     def default_severity(self) -> Severity:
         return Severity.WARNING
 
+    @property
+    def hint(self) -> str:
+        return "Passe sempre um random_state ou seed em funções estocásticas (ex: train_test_split(..., random_state=42))."
+
     def __init__(self):
         super().__init__()
         # Funções que deveriam ter random_state ou seed

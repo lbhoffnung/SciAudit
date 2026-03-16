@@ -109,10 +109,91 @@ paths:
     - "notebooks/backup/"
 ```
 
+### Sugestões Detalhadas
+Use a flag `--suggest-fix` para receber dicas acionáveis sobre como resolver cada violação:
+```bash
+sciaudit meu_script.py --suggest-fix
+```
+
+---
+
+## 🎮 Perfis de Rigor (`--profile`)
+
+Nem todo projeto exige o mesmo nível de rigor. O SciAudit oferece três perfis pré-definidos:
+
+| Perfil | Descrição | Uso Ideal |
+| :--- | :--- | :--- |
+| `balanced` (Padrão) | Severidades equilibradas conforme a tabela oficial. | Uso geral em Data Science. |
+| `strict` | Eleva quase todas as regras para `ERROR`. | Projetos médicos, financeiros ou teses. |
+| `relaxed` | Diminui o rigor de regras controversas. | Protipagem rápida e exploração. |
+
+```bash
+sciaudit . --profile strict
+```
+
+---
+
+## 🧱 Modo Baseline (Adoção em código legado)
+
+Se você está adotando o SciAudit em um projeto antigo com centenas de alertas, use o modo **baseline**. Ele permite ignorar violações antigas e focar apenas no que foi introduzido de novo:
+
+1. **Crie o baseline inicial**:
+   ```bash
+   sciaudit . --create-baseline sciaudit-baseline.json
+   ```
+2. **Use o baseline no CI**:
+   ```bash
+   sciaudit . --baseline sciaudit-baseline.json
+   ```
+*Nota: O exit code retornará 0 se houver apenas violações presentes no baseline. Violações novas quebrarão o build.*
+
+---
+
+## ⚙️ Configuração (`.sciaudit.yml`)
+
+Você pode personalizar o comportamento do SciAudit criando um arquivo `.sciaudit.yml` na raiz do seu projeto. A configuração no arquivo tem **precedência total** sobre os perfis.
+
+```yaml
+rules:
+  SCI-002: warning   # Forçar para warning
+  SCI-003: off       # Desativar regra
+  SCI-006: error     # Forçar para erro
+
+paths:
+  ignore:
+    - "venv/"
+    - "legacy_tests/"
+```
+
 ### Estratégias de Exit Code
-- `--exit-code-strategy any-error` (Padrão): Falha no build se houver qualquer violação de severidade `ERROR`.
-- `--exit-code-strategy errors-only`: Mesma que a anterior, ignora Warnings/Infos para o código de saída.
-- `--exit-code-strategy always-zero`: Nunca falha o build (útil para auditorias informativas).
+- `--exit-code-strategy any-error` (Padrão): Falha no build se houver qualquer violação de severidade `ERROR` (não presente no baseline).
+- `--exit-code-strategy errors-only`: Mesma que a anterior, ignora Warnings/Infos.
+- `--exit-code-strategy always-zero`: Nunca falha o build.
+
+---
+
+## 🎨 Exemplos Reais
+
+### ❌ Exemplo de Código Ruim (`leakage.py`)
+```python
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
+df = pd.read_csv("data.csv")
+# VIOLAÇÃO SCI-001: Fit antes do split!
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df)
+
+train, test = train_test_split(df_scaled)
+```
+
+### 🖥️ Saída do SciAudit
+```text
+  ● SCI-001 [error] Data Leakage
+    A função 'fit_transform' foi chamada antes de um split de dados ser detectado.
+    ➔ Sugestão: Aplique o split (train_test_split) ANTES de qualquer fit/transform.
+    Linha 7: df_scaled = scaler.fit_transform(df)
+```
 
 ---
 
