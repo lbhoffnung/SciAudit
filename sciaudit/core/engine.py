@@ -114,7 +114,7 @@ Gerado em: `{now}`
 - **Para SCI-003 (Multicolinearidade):** Antes de interpretar `feature_importances_`, use `df.corr()` ou um `heatmap` para demonstrar que você verificou se as variáveis não estão correlacionadas demais.
 
 ---
-*Este relatório foi gerado automaticamente pelo [SciAudit](https://github.com/seu-usuario/SciAudit) - A integridade científica como código.*
+*Este relatório foi gerado automaticamente pelo [SciAudit](https://github.com/behw0/SciAudit) - A integridade científica como código.*
 """
         return md
 
