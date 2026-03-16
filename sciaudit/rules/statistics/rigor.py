@@ -12,8 +12,12 @@ class OverfittingCegoRule(ScientificRule):
         return "SCI-005"
 
     @property
-    def description(self) -> str:
-        return "Overfitting Cego: Uso de métricas simples sem Cross-Validation detectável."
+    def rule_name(self) -> str:
+        return "Overfitting Cego"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.WARNING
 
     def __init__(self):
         super().__init__()
@@ -45,14 +49,13 @@ class OverfittingCegoRule(ScientificRule):
     def collect(self) -> list[Violation]:
         if self._metrics_found and not self._cv_found:
             for node in self._metrics_found:
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
+                self.add_violation(
                     message="Métrica de performance calculada sem evidência de validação cruzada (Cross-Validation). Resultados em hold-out simples podem ser excessivamente otimistas.",
-                    severity=Severity.HIGH,
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet=f"Uso de: {ast.unparse(node.func) if hasattr(ast, 'unparse') else '...'}"
-                ))
+                    snippet=f"Uso de: {ast.unparse(node.func) if hasattr(ast, 'unparse') else '...'}",
+                    hint="Use sempre cross_val_score ou GridSearchCV em vez de apenas métricas simples."
+                )
         return self.violations
 
 class PHackingRule(ScientificRule):
@@ -65,8 +68,12 @@ class PHackingRule(ScientificRule):
         return "SCI-004"
 
     @property
-    def description(self) -> str:
-        return "P-Value Hacking: Múltiplos testes estatísticos sem correção aparente."
+    def rule_name(self) -> str:
+        return "P-Value Hacking"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.WARNING
 
     def __init__(self):
         super().__init__()
@@ -101,22 +108,20 @@ class PHackingRule(ScientificRule):
         if not self._has_correction:
             if self._stat_tests_count >= 5:
                 node = self._test_nodes[0]
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
-                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Risco CRÍTICO de P-Hacking.",
-                    severity=Severity.CRITICAL,
+                self.add_violation(
+                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Risco ALTO de P-Hacking.",
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet="Múltiplos testes sem correção detectados."
-                ))
+                    snippet="Múltiplos testes sem correção detectados.",
+                    hint="Use correções de comparativos múltiplos como Bonferroni ou FDR."
+                )
             elif self._stat_tests_count >= 3:
                 node = self._test_nodes[0]
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
-                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Recomendado usar Bonferroni/FDR.",
-                    severity=Severity.MEDIUM,
+                self.add_violation(
+                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Risco MODERADO de P-Hacking.",
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet="Padrão de múltiplos testes sem correção."
-                ))
+                    snippet="Padrão de múltiplos testes sem correção.",
+                    hint="Considere usar multipletests para ajustar os p-values."
+                )
         return self.violations

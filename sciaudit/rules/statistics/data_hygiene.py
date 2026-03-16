@@ -12,8 +12,12 @@ class SilentNaNDropRule(ScientificRule):
         return "SCI-014"
 
     @property
-    def description(self) -> str:
-        return "Silent NaN Drop: Remoção de dados faltantes sem registro do impacto."
+    def rule_name(self) -> str:
+        return "Silent NaN Drop"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.WARNING
 
     def __init__(self):
         super().__init__()
@@ -25,7 +29,9 @@ class SilentNaNDropRule(ScientificRule):
 
     def visit_Call(self, node: ast.Call):
         func_name = ""
-        if isinstance(node.func, ast.Attribute):
+        if isinstance(node.func, ast.Name):
+            func_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
             func_name = node.func.attr
         
         if func_name == "dropna":
@@ -39,14 +45,13 @@ class SilentNaNDropRule(ScientificRule):
 
     def collect(self) -> list[Violation]:
         for node in self._pending_dropna:
-            self.violations.append(Violation(
-                rule_id=self.rule_id,
+            self.add_violation(
                 message="Chamada de 'dropna()' detectada sem print/log subsequente. Remover dados silenciosamente pode introduzir vieses de seleção não documentados.",
-                severity=Severity.LOW,
                 line=node.lineno,
                 column=node.col_offset,
-                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-            ))
+                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                hint="Adicione um print(df.shape) ou log após chamadas de dropna()."
+            )
         return self.violations
 
 class ClassImbalanceRule(ScientificRule):
@@ -59,8 +64,12 @@ class ClassImbalanceRule(ScientificRule):
         return "SCI-009"
 
     @property
-    def description(self) -> str:
-        return "Class Imbalance Ignored: Uso de acurácia sem checagem de balanceamento."
+    def rule_name(self) -> str:
+        return "Imbalance Ignored"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.WARNING
 
     def __init__(self):
         super().__init__()
@@ -90,12 +99,11 @@ class ClassImbalanceRule(ScientificRule):
 
     def collect(self) -> list[Violation]:
         if self._accuracy_found and not self._imbalance_check_found:
-            self.violations.append(Violation(
-                rule_id=self.rule_id,
+            self.add_violation(
                 message="Uso de 'accuracy_score' detectado sem evidência de checagem de balanceamento de classes (ex: value_counts). Acurácia é uma métrica enganosa em datasets desbalanceados.",
-                severity=Severity.MEDIUM,
                 line=self._acc_node.lineno,
                 column=self._acc_node.col_offset,
-                snippet=ast.unparse(self._acc_node) if hasattr(ast, "unparse") else "..."
-            ))
+                snippet=ast.unparse(self._acc_node) if hasattr(ast, "unparse") else "...",
+                hint="Cheque o balanceamento de classes (value_counts) antes de usar acurácia bruta."
+            )
         return self.violations

@@ -14,8 +14,12 @@ class CausalClaimsRule(ScientificRule):
         return "SCI-013"
 
     @property
-    def description(self) -> str:
-        return "Causal Claim Without Control: Afirmação de causalidade sem rigor metodológico."
+    def rule_name(self) -> str:
+        return "Causal Claims"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.INFO
 
     def __init__(self):
         super().__init__()
@@ -57,12 +61,11 @@ class CausalClaimsRule(ScientificRule):
     def collect(self) -> list[Violation]:
         if not self._has_rigor:
             for line_no, content in self._suspicious_comments:
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
+                self.add_violation(
                     message="Afirmação de causalidade ('causa', 'impacto') detectada em comentário. Sem o uso de variáveis de controle ou inferência causal, correlação não implica causalidade.",
-                    severity=Severity.MEDIUM,
                     line=line_no,
                     column=0,
-                    snippet=content
-                ))
+                    snippet=content,
+                    hint="Evite usar 'causa' ou 'efeito' em comentários sem métodos de inferência causal."
+                )
         return self.violations

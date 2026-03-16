@@ -13,8 +13,12 @@ class FeatureImportanceRule(ScientificRule):
         return "SCI-003"
 
     @property
-    def description(self) -> str:
-        return "Atribuição de Importância sem Verificação de Correlação: Resultados podem ser enganosos devido a multicolinearidade."
+    def rule_name(self) -> str:
+        return "Multicolinearidade"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.INFO
 
     def __init__(self):
         super().__init__()
@@ -53,12 +57,11 @@ class FeatureImportanceRule(ScientificRule):
     def collect(self) -> list[Violation]:
         if not self._has_correlation_check:
             for node in self._found_interpretations:
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
+                self.add_violation(
                     message=f"Atributo '{node.attr}' acessado sem evidência de checagem de correlação. Em presença de multicolinearidade, os valores de importância de features podem estar totalmente distorcidos.",
-                    severity=Severity.MEDIUM,
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet=f"Acesso a: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}"
-                ))
+                    snippet=f"Acesso a: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}",
+                    hint="Verifique a correlação (df.corr()) antes de interpretar importâncias."
+                )
         return self.violations

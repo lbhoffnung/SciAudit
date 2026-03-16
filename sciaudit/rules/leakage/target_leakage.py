@@ -13,8 +13,12 @@ class TargetLeakageRule(ScientificRule):
         return "SCI-001"
 
     @property
-    def description(self) -> str:
-        return "Possível Target Leakage: Transformações globais detectadas antes do split."
+    def rule_name(self) -> str:
+        return "Data Leakage"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.ERROR
 
     def __init__(self):
         super().__init__()
@@ -46,12 +50,11 @@ class TargetLeakageRule(ScientificRule):
 
     def collect(self) -> list[Violation]:
         for node in self._transform_calls_before_split:
-            self.violations.append(Violation(
-                rule_id=self.rule_id,
+            self.add_violation(
                 message="Transformação de dados detectada possivelmente antes do train/test split. Isso pode causar vazamento de informações do conjunto de teste para o treino.",
-                severity=Severity.HIGH,
                 line=node.lineno,
                 column=node.col_offset,
-                snippet=f"Chamada de função: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}"
-            ))
+                snippet=f"Chamada de função: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}",
+                hint="Realize o split antes de qualquer transformação (StandardScaler, fit_transform)."
+            )
         return self.violations

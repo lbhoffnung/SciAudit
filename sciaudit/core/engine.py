@@ -2,44 +2,70 @@ import ast
 import json
 import os
 import datetime
-from typing import List, Dict
+from typing import List, Dict, Optional
 from .models import Violation, AuditReport, Severity
 from ..rules.base import ScientificRule
+
+from .config import Config
 
 class AuditEngine:
     """O motor central que coordena a análise AST e as regras."""
     
-    def __init__(self):
+    def __init__(self, config: Optional[Config] = None):
         self.rules: List[ScientificRule] = []
+        self.config = config or Config()
 
     def register_rule(self, rule: ScientificRule):
+        # Aplicar overrides do config
+        rule_id = rule.rule_id
+        if self.config.is_rule_off(rule_id):
+            rule.enabled = False
+        
+        severity_val = self.config.get_rule_severity(rule_id)
+        if severity_val:
+            try:
+                rule.severity_override = Severity(severity_val)
+            except ValueError:
+                pass
+                
         self.rules.append(rule)
 
-    def _parse_ipynb(self, file_path: str) -> str:
-        """Extrai o código das células de um Jupyter Notebook."""
+    def _parse_ipynb(self, file_path: str):
+        """Extrai o código das células de um Jupyter Notebook e mapeia linhas para células."""
         with open(file_path, "r", encoding="utf-8") as f:
             nb_data = json.load(f)
         
         full_code = []
-        line_offset = 0
-        for cell in nb_data.get("cells", []):
+        line_to_cell = {}
+        current_line = 1
+        
+        for idx, cell in enumerate(nb_data.get("cells", [])):
             if cell.get("cell_type") == "code":
                 source = cell.get("source", [])
-                if isinstance(source, list):
-                    source = "".join(source)
-                full_code.append(source)
-                # Adicionamos uma quebra de linha entre células para manter a separação
-                full_code.append("\n")
+                source_str = "".join(source) if isinstance(source, list) else source
+                
+                cell_lines = source_str.splitlines(keepends=True)
+                for i in range(len(cell_lines)):
+                    line_to_cell[current_line + i] = idx + 1
+                
+                full_code.append(source_str)
+                # Adicionamos uma quebra de linha entre células
+                if not source_str.endswith("\n"):
+                    full_code.append("\n")
+                    current_line += len(cell_lines) + 1
+                else:
+                    current_line += len(cell_lines)
         
-        return "".join(full_code)
+        return "".join(full_code), line_to_cell
 
     def audit_file(self, file_path: str) -> AuditReport:
         content = ""
+        line_to_cell = {}
         is_notebook = file_path.endswith(".ipynb")
         
         try:
             if is_notebook:
-                content = self._parse_ipynb(file_path)
+                content, line_to_cell = self._parse_ipynb(file_path)
             else:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -50,8 +76,9 @@ class AuditEngine:
             error_msg = str(e) if not isinstance(e, SyntaxError) else e.msg
             report.violations.append(Violation(
                 rule_id="SYS-001",
+                rule_name="System Error",
                 message=f"Falha ao processar arquivo: {error_msg}",
-                severity=Severity.CRITICAL,
+                severity=Severity.ERROR,
                 line=getattr(e, 'lineno', 0),
                 column=getattr(e, 'offset', 0)
             ))
@@ -61,10 +88,18 @@ class AuditEngine:
         report = AuditReport(file_path=file_path)
         
         for rule in self.rules:
+            if not rule.enabled:
+                continue
             rule.reset()
             rule.visit(tree)
             rule.visit_content(content)
-            report.violations.extend(rule.collect())
+            
+            violations = rule.collect()
+            if is_notebook:
+                for v in violations:
+                    v.cell = line_to_cell.get(v.line)
+            
+            report.violations.extend(violations)
 
         report.score = self._calculate_score(report.violations)
         return report
@@ -128,18 +163,21 @@ Gerado em: `{now}`
         return md
 
     def _calculate_score(self, violations: List[Violation]) -> str:
-        if any(v.severity == Severity.CRITICAL for v in violations):
-            return "F"
-            
         # Penalidade por severidade
         score_value = 100
-        for v in violations:
-            if v.severity == Severity.CRITICAL: score_value -= 50
-            elif v.severity == Severity.HIGH: score_value -= 20
-            elif v.severity == Severity.MEDIUM: score_value -= 10
-            elif v.severity == Severity.LOW: score_value -= 5
+        errors = sum(1 for v in violations if v.severity == Severity.ERROR)
+        warnings = sum(1 for v in violations if v.severity == Severity.WARNING)
+        infos = sum(1 for v in violations if v.severity == Severity.INFO)
+
+        score_value -= (errors * 30)
+        score_value -= (warnings * 10)
+        score_value -= (infos * 2)
         
         if score_value < 0: score_value = 0
+
+        # Regra de teto: se houver ERROR, o score máximo é B
+        if errors > 0 and score_value > 70:
+            return "B"
 
         if score_value >= 95: return "A+"
         if score_value >= 85: return "A"

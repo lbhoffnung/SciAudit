@@ -13,8 +13,12 @@ class TestSetContaminationRule(ScientificRule):
         return "SCI-006"
 
     @property
-    def description(self) -> str:
-        return "Contaminação do Conjunto de Teste: Uso de X_test/y_test em fase de treinamento."
+    def rule_name(self) -> str:
+        return "Contaminação de Teste"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.ERROR
 
     def visit_Call(self, node: ast.Call):
         func_name = ""
@@ -27,25 +31,23 @@ class TestSetContaminationRule(ScientificRule):
             # Verifica se os argumentos passados contêm nomes 'test'
             for arg in node.args:
                 if isinstance(arg, ast.Name) and "test" in arg.id.lower():
-                    self.violations.append(Violation(
-                        rule_id=self.rule_id,
+                    self.add_violation(
                         message=f"O conjunto de teste '{arg.id}' foi passado para uma função de treinamento '{func_name}'. Isso invalida a avaliação do modelo.",
-                        severity=Severity.CRITICAL,
                         line=node.lineno,
                         column=node.col_offset,
-                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-                    ))
+                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                        hint="Nunca passe X_test ou y_test para o método fit()."
+                    )
             
             # Verifica keywords (ex: X=X_test)
             for kw in node.keywords:
                 if isinstance(kw.value, ast.Name) and "test" in kw.value.id.lower():
-                    self.violations.append(Violation(
-                        rule_id=self.rule_id,
+                    self.add_violation(
                         message=f"O conjunto de teste '{kw.value.id}' foi passado via keyword '{kw.arg}' para '{func_name}'.",
-                        severity=Severity.CRITICAL,
                         line=node.lineno,
                         column=node.col_offset,
-                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-                    ))
+                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                        hint="Verifique se está usando X_train/y_train no treinamento."
+                    )
 
         self.generic_visit(node)

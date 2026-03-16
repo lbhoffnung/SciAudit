@@ -4,19 +4,21 @@ from typing import List, Optional, Any
 from enum import Enum
 
 class Severity(Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
 
 @dataclass
 class Violation:
     rule_id: str
+    rule_name: str
     message: str
     severity: Severity
     line: int
     column: int
+    cell: Optional[int] = None
     snippet: Optional[str] = None
+    hint: Optional[str] = None
 
 @dataclass
 class AuditReport:

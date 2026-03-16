@@ -13,8 +13,12 @@ class ReproducibilityRule(ScientificRule):
         return "SCI-002"
 
     @property
-    def description(self) -> str:
-        return "Falta de Semente Determinística: Resultados podem não ser reprodutíveis."
+    def rule_name(self) -> str:
+        return "Falta de Semente"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.WARNING
 
     def __init__(self):
         super().__init__()
@@ -36,13 +40,12 @@ class ReproducibilityRule(ScientificRule):
             has_seed = any(kw.arg in ["random_state", "seed", "random_seed"] for kw in node.keywords)
             
             if not has_seed:
-                self.violations.append(Violation(
-                    rule_id=self.rule_id,
+                self.add_violation(
                     message=f"A função '{func_name}' foi chamada sem um 'random_state' ou 'seed' definido. Isso impede que seus resultados sejam reproduzidos exatamente.",
-                    severity=Severity.MEDIUM,
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-                ))
+                    snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                    hint="Passe sempre um random_state ou seed em funções estocásticas."
+                )
 
         self.generic_visit(node)

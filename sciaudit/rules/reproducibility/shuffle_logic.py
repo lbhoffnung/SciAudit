@@ -12,8 +12,12 @@ class ShuffleBeforeTimeSplitRule(ScientificRule):
         return "SCI-017"
 
     @property
-    def description(self) -> str:
-        return "Shuffle Before Time Split: Embaralhamento de dados temporais detectado."
+    def rule_name(self) -> str:
+        return "Time Shuffle"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.ERROR
 
     def visit_Call(self, node: ast.Call):
         func_name = ""
@@ -34,26 +38,24 @@ class ShuffleBeforeTimeSplitRule(ScientificRule):
                 # (Simplificação: procura por 'date', 'time', 'ano', 'mes' no código)
                 code_snippet = ast.unparse(node).lower()
                 if any(x in code_snippet for x in ["date", "time", "ano", "data", "hora"]):
-                    self.violations.append(Violation(
-                        rule_id=self.rule_id,
+                    self.add_violation(
                         message="Embaralhamento (shuffle=True) detectado em um split que parece envolver dados temporais. Isso destrói a estrutura de tempo e invalida a validação.",
-                        severity=Severity.HIGH,
                         line=node.lineno,
                         column=node.col_offset,
-                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-                    ))
+                        snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                        hint="Use shuffle=False em splits de séries temporais para preservar a causalidade temporal."
+                    )
 
         # 2. Verifica df.sample(frac=1) sem shuffle=False
         if func_name == "sample":
             has_frac_1 = any(kw.arg == "frac" and getattr(kw.value, "value", None) == 1 for kw in node.keywords)
             if has_frac_1:
-                 self.violations.append(Violation(
-                    rule_id=self.rule_id,
+                 self.add_violation(
                     message="Uso de '.sample(frac=1)' detectado. Se os dados forem temporais, isso causará vazamento de dados futuros no treino.",
-                    severity=Severity.MEDIUM,
                     line=node.lineno,
                     column=node.col_offset,
-                    snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-                ))
+                    snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                    hint="Evite reordenar dados se a ordem cronológica for importante."
+                )
 
         self.generic_visit(node)

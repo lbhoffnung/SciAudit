@@ -13,8 +13,12 @@ class TimeLeakageRule(ScientificRule):
         return "SCI-007"
 
     @property
-    def description(self) -> str:
-        return "Time Leakage: Reordenação de dados temporais detectada após o split."
+    def rule_name(self) -> str:
+        return "Time Leakage"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.ERROR
 
     def __init__(self):
         super().__init__()
@@ -36,14 +40,13 @@ class TimeLeakageRule(ScientificRule):
             self._split_found = True
 
         if self._split_found and func_name == "sort_values":
-            self.violations.append(Violation(
-                rule_id=self.rule_id,
+            self.add_violation(
                 message="Chamada de 'sort_values' detectada após um split. Em séries temporais, isso pode misturar passado e futuro indevidamente no conjunto de treino.",
-                severity=Severity.HIGH,
                 line=node.lineno,
                 column=node.col_offset,
-                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-            ))
+                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                hint="Evite reordenar dados após splits temporais (manter ordem cronológica)."
+            )
 
         self.generic_visit(node)
 
@@ -57,8 +60,12 @@ class LabelLeakageRule(ScientificRule):
         return "SCI-008"
 
     @property
-    def description(self) -> str:
-        return "Label Leakage: Criação de feature baseada diretamente na variável alvo."
+    def rule_name(self) -> str:
+        return "Label Leakage"
+
+    @property
+    def default_severity(self) -> Severity:
+        return Severity.ERROR
 
     def visit_Assign(self, node: ast.Assign):
         # Procura por padrões tipo df['feature'] = df['target'] * x
@@ -96,13 +103,12 @@ class LabelLeakageRule(ScientificRule):
         finder.visit(node.value)
         
         if finder.found:
-            self.violations.append(Violation(
-                rule_id=self.rule_id,
+            self.add_violation(
                 message=f"Possível Label Leakage: A variável '{ast.unparse(finder.target_node)}' (alvo) está sendo usada para criar uma nova variável no lado direito da atribuição.",
-                severity=Severity.CRITICAL,
                 line=node.lineno,
                 column=node.col_offset,
-                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
-            ))
+                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "...",
+                hint="Não use a variável alvo para derivar novas features."
+            )
 
         self.generic_visit(node)
