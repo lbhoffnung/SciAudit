@@ -31,5 +31,6 @@ dependencies = []
 [project.scripts]
 sciaudit = "sciaudit.cli.main:main"
 
-[tool.setuptools]
-packages = ["sciaudit"]
+[tool.setuptools.packages.find]
+include = ["sciaudit*"]
+exclude = ["corpus*", "tests*", "examples*", "tools*", "test_data*"]
