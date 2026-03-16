@@ -54,13 +54,33 @@ Ao usar a flag `--report`, o SciAudit gera um arquivo `SCIAUDIT_REPORT.md` conte
 
 ---
 
-## 📜 Leis Científicas Implementadas
+## 📜 Leis Científicas Implementadas (12+)
 
+O SciAudit organiza suas regras em categorias críticas:
+
+### 🔴 Leakage (Vazamento)
 | ID | Nome | Descrição |
 | :--- | :--- | :--- |
-| **SCI-001** | Data Leakage | Transformações de dados (fit/transform) ocorrendo antes do split. |
-| **SCI-002** | Reprodutibilidade | Falta de `random_state` ou `seed` em modelos e processos aleatórios. |
-| **SCI-003** | Multicolinearidade | Acesso a `feature_importances_` sem prova de análise de correlação. |
+| **SCI-001** | Data Leakage | Transformações (fit/transform) ocorrendo antes do split. |
+| **SCI-006** | Contaminação | Uso de `X_test` ou `y_test` dentro do método `fit()`. |
+| **SCI-007** | Time Leakage | Reordenação (`sort_values`) de dados temporais após o split. |
+| **SCI-008** | Label Leakage | Criação de features derivadas diretamente da variável alvo. |
+
+### 🟡 Estatística & Rigor
+| ID | Nome | Descrição |
+| :--- | :--- | :--- |
+| **SCI-004** | P-Value Hacking | Múltiplas comparações estatísticas sem correção de Bonferroni/FDR. |
+| **SCI-005** | Overfitting Cego | Uso de métricas (`accuracy`, `r2`) sem Cross-Validation detectável. |
+| **SCI-009** | Imbalance Ignored | Uso de acurácia em datasets desbalanceados sem checagem prévia. |
+| **SCI-014** | Silent NaN Drop | Remoção de dados faltantes (`dropna`) sem log/print do impacto. |
+
+### 🟢 Metodologia & Causalidade
+| ID | Nome | Descrição |
+| :--- | :--- | :--- |
+| **SCI-003** | Multicolinearidade | Interpretação de importância de features sem análise de correlação. |
+| **SCI-013** | Causal Hubris | Afirmações de causalidade em comentários sem evidência de rigor. |
+| **SCI-002** | Random Seed | Falta de `random_state` em funções estocásticas. |
+| **SCI-017** | Time Shuffle | Embaralhamento de dados temporais que destrói a ordem cronológica. |
 
 ---
 

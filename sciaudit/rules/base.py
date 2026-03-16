@@ -25,3 +25,7 @@ class ScientificRule(ABC, ast.NodeVisitor):
 
     def reset(self):
         self.violations = []
+
+    def visit_content(self, content: str):
+        """Opcional: Analisa o conteúdo bruto (ex: comentários)."""
+        pass

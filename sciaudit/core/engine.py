@@ -62,6 +62,7 @@ class AuditEngine:
         
         for rule in self.rules:
             rule.reset()
+            rule.visit_content(content)
             rule.visit(tree)
             report.violations.extend(rule.collect())
 

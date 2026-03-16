@@ -1,6 +1,6 @@
 import ast
-from .base import ScientificRule
-from ..core.models import Violation, Severity
+from ..base import ScientificRule
+from ...core.models import Violation, Severity
 
 class FeatureImportanceRule(ScientificRule):
     """

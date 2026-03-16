@@ -3,9 +3,15 @@ import sys
 import os
 
 from ..core.engine import AuditEngine
-from ..rules.data_leakage import TargetLeakageRule
-from ..rules.reproducibility import ReproducibilityRule
-from ..rules.methodology import FeatureImportanceRule
+from ..rules.leakage.target_leakage import TargetLeakageRule
+from ..rules.leakage.contamination import TestSetContaminationRule
+from ..rules.leakage.temporal_label import TimeLeakageRule, LabelLeakageRule
+from ..rules.reproducibility.random_seed import ReproducibilityRule
+from ..rules.reproducibility.shuffle_logic import ShuffleBeforeTimeSplitRule
+from ..rules.statistics.rigor import OverfittingCegoRule, PHackingRule
+from ..rules.statistics.data_hygiene import ClassImbalanceRule, SilentNaNDropRule
+from ..rules.causal.feature_importance import FeatureImportanceRule
+from ..rules.causal.claims import CausalClaimsRule
 
 def render_banner():
     banner = """
@@ -22,9 +28,27 @@ def render_banner():
 
 def run_audit(target_path: str, export_report: bool = False):
     engine = AuditEngine()
+    
+    # Registrando as leis científicas por categoria
+    # 1. Leakage
     engine.register_rule(TargetLeakageRule())
+    engine.register_rule(TestSetContaminationRule())
+    engine.register_rule(TimeLeakageRule())
+    engine.register_rule(LabelLeakageRule())
+    
+    # 2. Reproducibility
     engine.register_rule(ReproducibilityRule())
+    engine.register_rule(ShuffleBeforeTimeSplitRule())
+    
+    # 3. Statistics & Rigor
+    engine.register_rule(OverfittingCegoRule())
+    engine.register_rule(PHackingRule())
+    engine.register_rule(ClassImbalanceRule())
+    engine.register_rule(SilentNaNDropRule())
+    
+    # 4. Causal & Methodology
     engine.register_rule(FeatureImportanceRule())
+    engine.register_rule(CausalClaimsRule())
 
     reports = []
     if os.path.isfile(target_path):
