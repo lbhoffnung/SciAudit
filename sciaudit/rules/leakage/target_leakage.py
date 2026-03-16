@@ -18,6 +18,10 @@ class TargetLeakageRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._found_split = False
         self._transform_calls_before_split = []
 
@@ -41,9 +45,8 @@ class TargetLeakageRule(ScientificRule):
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
         for node in self._transform_calls_before_split:
-            violations.append(Violation(
+            self.violations.append(Violation(
                 rule_id=self.rule_id,
                 message="Transformação de dados detectada possivelmente antes do train/test split. Isso pode causar vazamento de informações do conjunto de teste para o treino.",
                 severity=Severity.HIGH,
@@ -51,4 +54,4 @@ class TargetLeakageRule(ScientificRule):
                 column=node.col_offset,
                 snippet=f"Chamada de função: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}"
             ))
-        return violations
+        return self.violations

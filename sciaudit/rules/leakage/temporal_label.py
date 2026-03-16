@@ -18,7 +18,12 @@ class TimeLeakageRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._split_found = False
+        self.violations = [] # Explicitly clearing violations
 
     def visit_Call(self, node: ast.Call):
         func_name = ""
@@ -57,25 +62,30 @@ class LabelLeakageRule(ScientificRule):
 
     def visit_Assign(self, node: ast.Assign):
         # Procura por padrões tipo df['feature'] = df['target'] * x
-        # Primeiro, verifica se há acesso a 'target' no lado direito
         
-        target_names = {"target", "label", "y", "preço", "valor", "classe"} # Names comuns
+        # 'y' removido para evitar falsos positivos críticos em todo projeto
+        target_names = {"target", "label", "preço", "valor", "classe", "default", "churn"}
         
         class TargetFinder(ast.NodeVisitor):
             def __init__(self):
                 self.found = False
                 self.target_node = None
             def visit_Subscript(self, s_node):
+                # Detecta d['target'] ou df['target']
                 if isinstance(s_node.slice, (ast.Constant, ast.Str)):
                     val = s_node.slice.value if isinstance(s_node.slice, ast.Constant) else s_node.slice.s
                     if str(val).lower() in target_names:
                         self.found = True
                         self.target_node = s_node
                 self.generic_visit(s_node)
+            
             def visit_Name(self, n_node):
-                if n_node.id.lower() in target_names:
+                # Detecta variáveis com nomes muito específicos de target
+                # Mas ignoramos se for apenas 'y' sozinho em nomes genéricos
+                if n_node.id.lower() in target_names and len(n_node.id) > 1:
                     self.found = True
                     self.target_node = n_node
+                self.generic_visit(n_node)
 
         finder = TargetFinder()
         finder.visit(node.value)

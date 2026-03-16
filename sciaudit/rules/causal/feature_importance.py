@@ -18,8 +18,12 @@ class FeatureImportanceRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
-        self._has_correlation_check = False
         self._suspicious_attributes = {"feature_importances_", "coef_", "get_feature_importance"}
+        self.reset()
+
+    def reset(self):
+        super().reset()
+        self._has_correlation_check = False
         self._found_interpretations = []
 
     def visit_Attribute(self, node: ast.Attribute):
@@ -47,10 +51,9 @@ class FeatureImportanceRule(ScientificRule):
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
         if not self._has_correlation_check:
             for node in self._found_interpretations:
-                violations.append(Violation(
+                self.violations.append(Violation(
                     rule_id=self.rule_id,
                     message=f"Atributo '{node.attr}' acessado sem evidência de checagem de correlação. Em presença de multicolinearidade, os valores de importância de features podem estar totalmente distorcidos.",
                     severity=Severity.MEDIUM,
@@ -58,4 +61,4 @@ class FeatureImportanceRule(ScientificRule):
                     column=node.col_offset,
                     snippet=f"Acesso a: {ast.unparse(node) if hasattr(ast, 'unparse') else '...'}"
                 ))
-        return violations
+        return self.violations

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sciaudit"
 version = "0.1.0"
 authors = [
-  { name = "Seu Nome", email = "seu-email@exemplo.com" },
+  { name = "behw0", email = "behw0@proton.me" },
 ]
 description = "SciAudit: Auditor de integridade científica em código e notebooks Python."
 readme = "README.md"

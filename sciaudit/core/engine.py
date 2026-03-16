@@ -62,8 +62,8 @@ class AuditEngine:
         
         for rule in self.rules:
             rule.reset()
-            rule.visit_content(content)
             rule.visit(tree)
+            rule.visit_content(content)
             report.violations.extend(rule.collect())
 
         report.score = self._calculate_score(report.violations)

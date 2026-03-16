@@ -17,8 +17,11 @@ class SilentNaNDropRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
-        self._last_dropna_node = None
-        self._has_reporting_after = False
+        self.reset()
+
+    def reset(self):
+        super().reset()
+        self._pending_dropna = [] # Lista de nós dropna sem reporte
 
     def visit_Call(self, node: ast.Call):
         func_name = ""
@@ -26,26 +29,25 @@ class SilentNaNDropRule(ScientificRule):
             func_name = node.func.attr
         
         if func_name == "dropna":
-            self._last_dropna_node = node
-            self._has_reporting_after = False # Reset para o novo dropna
+            self._pending_dropna.append(node)
 
-        if func_name in ["print", "info", "log", "len", "shape"] and self._last_dropna_node:
-            self._has_reporting_after = True
+        if func_name in ["print", "info", "log", "len", "shape", "head", "display"]:
+            # Se houve um reporte, assumimos que todos os dropnas anteriores foram "registrados"
+            self._pending_dropna = []
 
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
-        if self._last_dropna_node and not self._has_reporting_after:
-            violations.append(Violation(
+        for node in self._pending_dropna:
+            self.violations.append(Violation(
                 rule_id=self.rule_id,
                 message="Chamada de 'dropna()' detectada sem print/log subsequente. Remover dados silenciosamente pode introduzir vieses de seleção não documentados.",
                 severity=Severity.LOW,
-                line=self._last_dropna_node.lineno,
-                column=self._last_dropna_node.col_offset,
-                snippet=ast.unparse(self._last_dropna_node) if hasattr(ast, "unparse") else "..."
+                line=node.lineno,
+                column=node.col_offset,
+                snippet=ast.unparse(node) if hasattr(ast, "unparse") else "..."
             ))
-        return violations
+        return self.violations
 
 class ClassImbalanceRule(ScientificRule):
     """
@@ -62,6 +64,10 @@ class ClassImbalanceRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._accuracy_found = False
         self._imbalance_check_found = False
         self._acc_node = None
@@ -83,9 +89,8 @@ class ClassImbalanceRule(ScientificRule):
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
         if self._accuracy_found and not self._imbalance_check_found:
-            violations.append(Violation(
+            self.violations.append(Violation(
                 rule_id=self.rule_id,
                 message="Uso de 'accuracy_score' detectado sem evidência de checagem de balanceamento de classes (ex: value_counts). Acurácia é uma métrica enganosa em datasets desbalanceados.",
                 severity=Severity.MEDIUM,
@@ -93,4 +98,4 @@ class ClassImbalanceRule(ScientificRule):
                 column=self._acc_node.col_offset,
                 snippet=ast.unparse(self._acc_node) if hasattr(ast, "unparse") else "..."
             ))
-        return violations
+        return self.violations

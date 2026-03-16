@@ -17,6 +17,10 @@ class OverfittingCegoRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._metrics_found = []
         self._cv_found = False
 
@@ -39,10 +43,9 @@ class OverfittingCegoRule(ScientificRule):
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
         if self._metrics_found and not self._cv_found:
             for node in self._metrics_found:
-                violations.append(Violation(
+                self.violations.append(Violation(
                     rule_id=self.rule_id,
                     message="Métrica de performance calculada sem evidência de validação cruzada (Cross-Validation). Resultados em hold-out simples podem ser excessivamente otimistas.",
                     severity=Severity.HIGH,
@@ -50,7 +53,7 @@ class OverfittingCegoRule(ScientificRule):
                     column=node.col_offset,
                     snippet=f"Uso de: {ast.unparse(node.func) if hasattr(ast, 'unparse') else '...'}"
                 ))
-        return violations
+        return self.violations
 
 class PHackingRule(ScientificRule):
     """
@@ -67,6 +70,10 @@ class PHackingRule(ScientificRule):
 
     def __init__(self):
         super().__init__()
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._stat_tests_count = 0
         self._has_correction = False
         self._test_nodes = []
@@ -91,16 +98,25 @@ class PHackingRule(ScientificRule):
         self.generic_visit(node)
 
     def collect(self) -> list[Violation]:
-        violations = []
-        # Se mais de 3 testes estatísticos sem nenhuma função de correção detectada
-        if self._stat_tests_count > 3 and not self._has_correction:
-            first_node = self._test_nodes[0]
-            violations.append(Violation(
-                rule_id=self.rule_id,
-                message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção (Bonferroni/FDR). Isso aumenta drasticamente a chance de falsos positivos (P-Hacking).",
-                severity=Severity.CRITICAL,
-                line=first_node.lineno,
-                column=first_node.col_offset,
-                snippet="Detectado padrão de múltiplos testes sem correção."
-            ))
-        return violations
+        if not self._has_correction:
+            if self._stat_tests_count >= 5:
+                node = self._test_nodes[0]
+                self.violations.append(Violation(
+                    rule_id=self.rule_id,
+                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Risco CRÍTICO de P-Hacking.",
+                    severity=Severity.CRITICAL,
+                    line=node.lineno,
+                    column=node.col_offset,
+                    snippet="Múltiplos testes sem correção detectados."
+                ))
+            elif self._stat_tests_count >= 3:
+                node = self._test_nodes[0]
+                self.violations.append(Violation(
+                    rule_id=self.rule_id,
+                    message=f"Detectados {self._stat_tests_count} testes estatísticos sem funções de correção. Recomendado usar Bonferroni/FDR.",
+                    severity=Severity.MEDIUM,
+                    line=node.lineno,
+                    column=node.col_offset,
+                    snippet="Padrão de múltiplos testes sem correção."
+                ))
+        return self.violations

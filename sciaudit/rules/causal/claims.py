@@ -21,6 +21,10 @@ class CausalClaimsRule(ScientificRule):
         super().__init__()
         self._causal_keywords = [r"causa", r"impacto", r"efeito", r"decorrente de"]
         self._control_keywords = ["control", "vif", "instrumental", "propensity", "causal", "dag"]
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self._has_rigor = False
         self._suspicious_comments = []
 
@@ -51,10 +55,9 @@ class CausalClaimsRule(ScientificRule):
                     self._suspicious_comments.append((i+1, line.strip()))
 
     def collect(self) -> list[Violation]:
-        violations = []
         if not self._has_rigor:
             for line_no, content in self._suspicious_comments:
-                violations.append(Violation(
+                self.violations.append(Violation(
                     rule_id=self.rule_id,
                     message="Afirmação de causalidade ('causa', 'impacto') detectada em comentário. Sem o uso de variáveis de controle ou inferência causal, correlação não implica causalidade.",
                     severity=Severity.MEDIUM,
@@ -62,4 +65,4 @@ class CausalClaimsRule(ScientificRule):
                     column=0,
                     snippet=content
                 ))
-        return violations
+        return self.violations
