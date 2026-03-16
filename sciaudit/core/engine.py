@@ -109,9 +109,18 @@ Gerado em: `{now}`
 
         md += """
 ## 💡 Sugestões de Remediação
-- **Para SCI-001 (Leakage):** Certifique-se de realizar o `train_test_split` antes de qualquer chamada a `StandardScaler`, `MinMaxScaler` ou `fit_transform`.
-- **Para SCI-002 (Reprodutibilidade):** Sempre passe um `random_state` (ex: 42) em funções estocásticas do scikit-learn ou pandas.
-- **Para SCI-003 (Multicolinearidade):** Antes de interpretar `feature_importances_`, use `df.corr()` ou um `heatmap` para demonstrar que você verificou se as variáveis não estão correlacionadas demais.
+- **Para SCI-001 (Leakage):** Realize o split *antes* de qualquer transformação (`StandardScaler`, `fit_transform`).
+- **Para SCI-002 (Reprodutibilidade):** Passe sempre um `random_state` ou `seed` em funções estocásticas.
+- **Para SCI-003 (Multicolinearidade):** Verifique a correlação (`df.corr()`) antes de interpretar importâncias.
+- **Para SCI-004 (P-Hacking):** Use correções de comparativos múltiplos como Bonferroni ou FDR (`multipletests`).
+- **Para SCI-005 (Overfitting):** Use sempre `cross_val_score` ou `GridSearchCV` em vez de apenas métricas simples.
+- **Para SCI-006 (Contaminação):** Nunca passe `X_test` ou `y_test` para o método `fit()`.
+- **Para SCI-007 (Time Leakage):** Evite reordenar dados após splits temporais (manter ordem cronológica).
+- **Para SCI-008 (Label Leakage):** Não use a variável alvo para derivar novas features.
+- **Para SCI-009 (Imbalance):** Cheque o balanceamento de classes (`value_counts`) antes de usar acurácia bruta.
+- **Para SCI-013 (Causal Claims):** Evite usar "causa" ou "efeito" em comentários sem métodos de inferência causal.
+- **Para SCI-014 (Silent Drop):** Adicione um `print(df.shape)` ou log após chamadas de `dropna()`.
+- **Para SCI-017 (Time Shuffle):** Use `shuffle=False` em splits de séries temporais para preservar a causalidade temporal.
 
 ---
 *Este relatório foi gerado automaticamente pelo [SciAudit](https://github.com/lbhoffnung/SciAudit) - A integridade científica como código.*

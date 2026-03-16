@@ -87,5 +87,36 @@ class TestRules(unittest.TestCase):
         rule.visit_content(content)
         self.assertTrue(any(v.rule_id == "SCI-013" for v in rule.collect()))
 
+    # --- Casos Negativos (Garantia de que código bom não gera alerta) ---
+    
+    def test_no_false_positive_SCI_001(self):
+        code = "X_train, X_test = train_test_split(X); scaler.fit(X_train)"
+        tree = ast.parse(code)
+        rule = TargetLeakageRule()
+        rule.visit(tree)
+        self.assertEqual(len(rule.collect()), 0)
+
+    def test_no_false_positive_SCI_008(self):
+        # O uso de 'y' como variável isolada não deve disparar Label Leakage
+        code = "X, y = train_test_split(df); model.fit(X, y)"
+        tree = ast.parse(code)
+        rule = LabelLeakageRule()
+        rule.visit(tree)
+        self.assertEqual(len(rule.collect()), 0)
+
+    def test_no_false_positive_SCI_014(self):
+        code = "df.dropna(); print(df.shape)"
+        tree = ast.parse(code)
+        rule = SilentNaNDropRule()
+        rule.visit(tree)
+        self.assertEqual(len(rule.collect()), 0)
+
+    def test_no_false_positive_SCI_002(self):
+        code = "train_test_split(X, y, random_state=42)"
+        tree = ast.parse(code)
+        rule = ReproducibilityRule()
+        rule.visit(tree)
+        self.assertEqual(len(rule.collect()), 0)
+
 if __name__ == "__main__":
     unittest.main()

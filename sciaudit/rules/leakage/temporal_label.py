@@ -64,7 +64,12 @@ class LabelLeakageRule(ScientificRule):
         # Procura por padrões tipo df['feature'] = df['target'] * x
         
         # 'y' removido para evitar falsos positivos críticos em todo projeto
-        target_names = {"target", "label", "preço", "valor", "classe", "default", "churn"}
+        # Nomes comuns de target, mas ignoramos 'y' para evitar falsos positivos
+        target_names = {
+            "target", "label", "y_true", "y_train", "y_test", 
+            "survived", "churn", "default", "price", "preço", 
+            "valor", "classe", "category"
+        }
         
         class TargetFinder(ast.NodeVisitor):
             def __init__(self):
