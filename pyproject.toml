@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sciaudit"
+version = "0.1.0"
+authors = [
+  { name = "Seu Nome", email = "seu-email@exemplo.com" },
+]
+description = "SciAudit: Auditor de integridade científica em código e notebooks Python."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/seu-usuario/SciAudit"
+"Bug Tracker" = "https://github.com/seu-usuario/SciAudit/issues"
+
+[project.scripts]
+sciaudit = "sciaudit.cli.main:main"
