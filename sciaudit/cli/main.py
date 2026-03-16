@@ -5,9 +5,10 @@ import os
 import io
 from typing import List, Optional
 
-# Forçar UTF-8 no Windows para evitar erros de encoding com banners/emojis
-if hasattr(sys.stdout, 'buffer'):
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+def configure_stdout_utf8():
+    """Forçar UTF-8 no Windows para evitar erros de encoding com banners/emojis."""
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 from ..core.engine import AuditEngine
 from ..rules.leakage.target_leakage import TargetLeakageRule
@@ -133,7 +134,7 @@ def run_audit(paths: list[str], export_report: bool = False, output_format: str 
                 "warnings": total_warnings,
                 "infos": total_infos,
                 "files_audited": len(reports),
-                "baseline_active": bool(baseline_path)
+                "baseline_active": bool(engine.config.baseline)
             },
             "violations": []
         }
@@ -213,18 +214,19 @@ def run_audit(paths: list[str], export_report: bool = False, output_format: str 
 
     # Exit code logic
     if exit_strategy == "any-error":
-        if total_errors > 0: sys.exit(1)
+        if total_errors > 0 or total_warnings > 0: sys.exit(1)
     elif exit_strategy == "errors-only":
         if total_errors > 0: sys.exit(1)
     # always-zero just continues
 
 def main():
+    configure_stdout_utf8()
     parser = argparse.ArgumentParser(description="SciAudit: Integridade científica como código.")
     parser.add_argument("paths", nargs="*", default=["."], help="Arquivos ou diretórios (default: .)")
     parser.add_argument("--report", action="store_true", help="Gera SCIAUDIT_REPORT.md")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Formato da saída")
     parser.add_argument("--exit-code-strategy", choices=["any-error", "errors-only", "always-zero"], 
-                        default="any-error", help="Estratégia de exit code")
+                        default="any-error", help="any-error: falha em ERROR/WARNING | errors-only: falha apenas em ERROR")
     parser.add_argument("--suggest-fix", action="store_true", help="Mostra sugestões de correção detalhadas")
     parser.add_argument("--profile", choices=["strict", "balanced", "relaxed"], default="balanced", help="Perfil de rigor científico")
     parser.add_argument("--baseline", help="Caminho para o arquivo de baseline (ignora violações antigas)")

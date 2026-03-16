@@ -123,13 +123,9 @@ Nem todo projeto exige o mesmo nível de rigor. O SciAudit oferece três perfis 
 
 | Perfil | Descrição | Uso Ideal |
 | :--- | :--- | :--- |
-| `balanced` (Padrão) | Severidades equilibradas conforme a tabela oficial. | Uso geral em Data Science. |
+| `balanced` (Padrão) | Severidades padrão das regras. | Uso geral em Data Science. |
 | `strict` | Eleva quase todas as regras para `ERROR`. | Projetos médicos, financeiros ou teses. |
 | `relaxed` | Diminui o rigor de regras controversas. | Protipagem rápida e exploração. |
-
-```bash
-sciaudit . --profile strict
-```
 
 ---
 
@@ -166,8 +162,8 @@ paths:
 ```
 
 ### Estratégias de Exit Code
-- `--exit-code-strategy any-error` (Padrão): Falha no build se houver qualquer violação de severidade `ERROR` (não presente no baseline).
-- `--exit-code-strategy errors-only`: Mesma que a anterior, ignora Warnings/Infos.
+- `--exit-code-strategy any-error` (Padrão): Falha no build se houver qualquer violação `ERROR` ou `WARNING` (não presente no baseline).
+- `--exit-code-strategy errors-only`: Falha no build apenas em caso de violações `ERROR`.
 - `--exit-code-strategy always-zero`: Nunca falha o build.
 
 ---

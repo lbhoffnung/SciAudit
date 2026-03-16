@@ -12,7 +12,8 @@ class Config:
             "SCI-009": "error", "SCI-013": "error", "SCI-014": "error", "SCI-017": "error",
         },
         "balanced": {
-            # Standard defaults
+            # O perfil balanced utiliza as severidades padrão definidas em cada regra.
+            # Não remove nem eleva o rigor além do planejado originalmente.
         },
         "relaxed": {
             "SCI-002": "info",
@@ -43,8 +44,12 @@ class Config:
 
     def should_ignore(self, path: str) -> bool:
         norm_path = os.path.normpath(path).replace("\\", "/")
+        path_parts = norm_path.split("/")
+        
         for ignore in self.ignore_paths:
-            if ignore in norm_path:
+            # Verifica se o padrão de ignore (ex: 'venv') é uma sub-pasta exata
+            # ou o arquivo exato dentro do caminho completo.
+            if ignore in path_parts:
                 return True
         return False
 
@@ -53,7 +58,10 @@ class Config:
         Check if a violation fingerprint matches one in the baseline.
         """
         for b in self.baseline:
-            # Match by rule_id, file and line (basic fingerprint)
+            # Optamos por não incluir 'message' na comparação obrigatória do baseline
+            # para evitar que mudanças cosméticas em hints ou mensagens (ex: correções ortográficas)
+            # invalidem todo o registro do baseline injustamente. 
+            # O fingerprint é focado em (regra, arquivo, linha).
             if b.get("rule_id") == violation_data.get("rule_id") and \
                b.get("file") == violation_data.get("file") and \
                b.get("line") == violation_data.get("line"):

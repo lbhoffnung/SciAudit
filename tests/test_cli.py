@@ -47,6 +47,24 @@ class TestCLI(unittest.TestCase):
         finally:
             os.remove(fpath)
 
+    def test_exit_codes_warning(self):
+        # Create a file with only a WARNING violation (SCI-002: no seed)
+        code = "train_test_split(X, y)"
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write(code)
+            fpath = f.name
+        
+        try:
+            # any-error should fail (1) for WARNING now
+            res = self.run_sciaudit([fpath, "--exit-code-strategy", "any-error"], expected_code=1)
+            self.assertEqual(res.returncode, 1)
+
+            # errors-only should pass (0) for WARNING
+            res = self.run_sciaudit([fpath, "--exit-code-strategy", "errors-only"], expected_code=0)
+            self.assertEqual(res.returncode, 0)
+        finally:
+            os.remove(fpath)
+
     def test_baseline_filtering(self):
         code = "scaler.fit(X); train_test_split(X, y)\n"
         with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
