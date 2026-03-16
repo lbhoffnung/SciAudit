@@ -13,3 +13,15 @@ dist/
 test_data/
 SCIAUDIT_REPORT.md
 implementation_plan.md
+
+# AI Agents & Local Configs
+.agent/
+.sciaudit_cache/
+
+# Local Temporary Logs/Results
+audit_log.txt
+audit_check.json
+audit_check_utf8.json
+test_results.txt
+test_ignore_logic.py
+*.tmp
