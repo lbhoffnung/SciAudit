@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sciaudit"
 version = "0.1.0"
 authors = [
-  { name = "behw0", email = "behw0@proton.me" },
+  { name = "Lucas Hoffnung Bernardo", email = "lumatizerh@hotmail.com" },
 ]
 description = "SciAudit: Auditor de integridade científica em código e notebooks Python."
 readme = "README.md"
@@ -21,8 +21,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-"Homepage" = "https://github.com/behw0/SciAudit"
-"Bug Tracker" = "https://github.com/behw0/SciAudit/issues"
+"Homepage" = "https://github.com/lbhoffnung/SciAudit"
+"Bug Tracker" = "https://github.com/lbhoffnung/SciAudit/issues"
 
 [project.scripts]
 sciaudit = "sciaudit.cli.main:main"
