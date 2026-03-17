@@ -26,13 +26,13 @@ from ..core.models import Severity
 
 def render_banner():
     banner = """
-    \033[94m   _____Np_    _  _   _             _ _ _   
-     / ____|  (_) / \\ | |           | (_) |  
-    | (___   ___ / _ \\| |  _   _  __| |_| |_ 
-     \\___ \\ / __/ /_\\ \\ | | | | |/ _` | | __|
-     ____) | (__/ ___ \\ | |_| | | (_| | | |_ 
-    |_____/ \\___/_/   \\_\\_| \\__,_|\\__,_|_|\\__|
-                                             \033[0m
+    \033[94m
+     ____       _  _             _ _ _   
+    / ___|  ___(_)/ \\        _  | (_) |  
+    \\___ \\ / __/ / _ \\ | | | |/ _` | | |_ 
+     ___) | (__ / ___ \\| |_| | (_| | | |_ 
+    |____/ \\___/_/   \\_\\_\\__,_|_\\__,_|_|\\__|
+    \033[0m
     \033[93m>>> A integridade científica como código.\033[0m
     """
     print(banner)
@@ -73,18 +73,28 @@ def run_audit(paths: list[str], export_report: bool = False, output_format: str 
     reports = []
     
     for p in paths:
+        # Normalize path for comparison with ignore list
+        is_direct_explicit = p != "." and p != "./" and p != ".\\"
+        
         if os.path.isfile(p):
-            if not engine.config.should_ignore(p):
-                reports.append(engine.audit_file(p))
+            reports.append(engine.audit_file(p))
         else:
+            norm_p = os.path.abspath(p)
             for root, _, files in os.walk(p):
-                # Check if current directory should be ignored
-                if engine.config.should_ignore(root):
-                    continue
+                # Only check folder ignores if we are NOT at the top-level of an explicit request,
+                # OR if we are auditing the root "."
+                if not is_direct_explicit or os.path.abspath(root) != norm_p:
+                    if engine.config.should_ignore(root):
+                        continue
+                        
                 for file in files:
                     if file.endswith((".py", ".ipynb")):
                         fpath = os.path.join(root, file)
-                        if not engine.config.should_ignore(fpath):
+                        # We only check file ignores if it wasn't a direct explicit request for that file
+                        # (which is already covered by isfile check above) or if walking recursive.
+                        # For simplicity: if the parent folder 'root' is allowed, we only check 
+                        # if the file itself is specifically ignored.
+                        if is_direct_explicit or not engine.config.should_ignore(fpath):
                             reports.append(engine.audit_file(fpath))
 
     all_violations_for_baseline = []
