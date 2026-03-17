@@ -3,10 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](https://github.com/lbhoffnung/SciAudit)
+[![SciAudit CI](https://github.com/lbhoffnung/SciAudit/actions/workflows/sciaudit.yml/badge.svg)](https://github.com/lbhoffnung/SciAudit/actions/workflows/sciaudit.yml)
 
 > **"Seu paper/produção está pronto para o peer-review? O SciAudit diz sim ou não em 1 minuto."**
 
 O **SciAudit** é o primeiro linter do mundo focado não na qualidade do código, mas na **integridade da ciência**. Ele escaneia seus scripts Python e Jupyter Notebooks em busca de violações metodológicas comuns que invalidam resultados de Data Science e Machine Learning.
+
+*O próprio **SciAudit** audita este repositório em todo commit; score atual **A+** sem violações.*
 
 ---
 
